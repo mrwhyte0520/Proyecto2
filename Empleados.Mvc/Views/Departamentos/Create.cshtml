@@ -1,0 +1,16 @@
+@model DepartamentoFormViewModel
+@{
+    ViewData["Title"] = "Nuevo departamento";
+}
+
+<a asp-action="Index" class="btn btn-secondary mb-3">&larr; Volver</a>
+
+<h1>Nuevo departamento</h1>
+
+<form asp-action="Create" method="post">
+    @await Html.PartialAsync("_Form", Model)
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

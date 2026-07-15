@@ -1,0 +1,102 @@
+@model EmpleadoDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.Nombre} {Model.Apellido}";
+    var puedeGestionar = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.RRHH);
+}
+
+@if (TempData["Mensaje"] is not null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+@if (TempData["Error"] is not null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="row">
+    <div class="col-md-3 text-center">
+        @if (!string.IsNullOrEmpty(Model.FotografiaRuta))
+        {
+            <img src="@Model.FotografiaRuta" class="img-fluid rounded mb-2" alt="Fotografía" />
+        }
+        else
+        {
+            <div class="bg-light border rounded d-flex align-items-center justify-content-center mb-2" style="height:200px;">
+                <span class="text-muted">Sin fotografía</span>
+            </div>
+        }
+
+        @if (puedeGestionar && Model.Estado != "Despedido")
+        {
+            <form asp-action="SubirFoto" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                <input type="file" name="foto" accept=".jpg,.jpeg,.png" class="form-control form-control-sm mb-2" />
+                <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Subir foto</button>
+            </form>
+        }
+    </div>
+
+    <div class="col-md-9">
+        <h1>@Model.Nombre @Model.Apellido</h1>
+        <span class="badge @(Model.Estado == "Activo" ? "bg-success" : Model.Estado == "Inactivo" ? "bg-secondary" : "bg-danger") mb-3">
+            @Model.Estado
+        </span>
+
+        <dl class="row">
+            <dt class="col-sm-3">Departamento</dt>
+            <dd class="col-sm-9">@Model.DepartamentoNombre</dd>
+
+            <dt class="col-sm-3">Puesto</dt>
+            <dd class="col-sm-9">@Model.Puesto</dd>
+
+            <dt class="col-sm-3">Salario</dt>
+            <dd class="col-sm-9">@Model.Salario.ToString("C")</dd>
+
+            <dt class="col-sm-3">Fecha de nacimiento</dt>
+            <dd class="col-sm-9">@Model.FechaNacimiento.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Fecha de contratación</dt>
+            <dd class="col-sm-9">@Model.FechaContratacion.ToString("dd/MM/yyyy")</dd>
+
+            @if (Model.FechaTerminacion is not null)
+            {
+                <dt class="col-sm-3">Fecha de terminación</dt>
+                <dd class="col-sm-9">@Model.FechaTerminacion.Value.ToString("dd/MM/yyyy")</dd>
+            }
+
+            <dt class="col-sm-3">Dirección</dt>
+            <dd class="col-sm-9">@Model.Direccion</dd>
+
+            <dt class="col-sm-3">Teléfono</dt>
+            <dd class="col-sm-9">@Model.Telefono</dd>
+
+            <dt class="col-sm-3">Correo</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+        </dl>
+
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="Index" class="btn btn-secondary">Volver al listado</a>
+
+            @if (puedeGestionar && Model.Estado != "Despedido")
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+
+                @if (Model.Estado == "Activo")
+                {
+                    <form asp-action="Desactivar" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('¿Desactivar a este empleado? Podrá reactivarlo luego.');">
+                        <button type="submit" class="btn btn-warning">Desactivar</button>
+                    </form>
+                }
+                else if (Model.Estado == "Inactivo")
+                {
+                    <form asp-action="Reactivar" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="btn btn-success">Reactivar</button>
+                    </form>
+                }
+
+                <form asp-action="Despedir" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('¿Despedir a este empleado? Esta acción no se puede deshacer.');">
+                    <button type="submit" class="btn btn-danger">Despedir</button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

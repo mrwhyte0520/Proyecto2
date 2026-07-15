@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Sistema de Gestión de Empleados</h1>
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <p class="lead">Bienvenido, @User.Identity!.Name.</p>
+        <a asp-controller="Empleados" asp-action="Index" class="btn btn-primary">Ver empleados</a>
+        <a asp-controller="Departamentos" asp-action="Index" class="btn btn-outline-secondary">Ver departamentos</a>
+    }
+    else
+    {
+        <p class="lead">Inicia sesión para gestionar empleados y departamentos.</p>
+        <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Iniciar sesión</a>
+    }
+</div>

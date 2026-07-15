@@ -1,0 +1,91 @@
+@model EmpleadoIndexViewModel
+@{
+    ViewData["Title"] = "Empleados";
+}
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-secondary mb-3">&larr; Volver</a>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Empleados</h1>
+    @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.RRHH))
+    {
+        <a asp-action="Create" class="btn btn-primary">Nuevo empleado</a>
+    }
+</div>
+
+@if (TempData["Mensaje"] is not null)
+{
+    <div class="alert alert-success">@TempData["Mensaje"]</div>
+}
+@if (TempData["Error"] is not null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form method="get" asp-action="Index" class="row row-cols-lg-auto g-2 align-items-center mb-3">
+    <div class="col-12">
+        <input type="text" name="nombre" value="@Model.Nombre" class="form-control" placeholder="Nombre" />
+    </div>
+    <div class="col-12">
+        <input type="text" name="apellido" value="@Model.Apellido" class="form-control" placeholder="Apellido" />
+    </div>
+    <div class="col-12">
+        <input type="date" name="fechaContratacion" value="@Model.FechaContratacion?.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+    <div class="col-12">
+        <button type="submit" class="btn btn-outline-secondary">Filtrar</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+</form>
+
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Departamento</th>
+            <th>Puesto</th>
+            <th>Fecha contratación</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var empleado in Model.Items)
+        {
+            <tr>
+                <td>@empleado.Nombre</td>
+                <td>@empleado.Apellido</td>
+                <td>@empleado.DepartamentoNombre</td>
+                <td>@empleado.Puesto</td>
+                <td>@empleado.FechaContratacion.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <span class="badge @(empleado.Estado == "Activo" ? "bg-success" : empleado.Estado == "Inactivo" ? "bg-secondary" : "bg-danger")">
+                        @empleado.Estado
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@empleado.Id" class="btn btn-sm btn-outline-primary">Ver</a>
+                </td>
+            </tr>
+        }
+        @if (!Model.Items.Any())
+        {
+            <tr><td colspan="7" class="text-center text-muted">No se encontraron empleados.</td></tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-nombre="@Model.Nombre" asp-route-apellido="@Model.Apellido" asp-route-fechaContratacion="@Model.FechaContratacion?.ToString("yyyy-MM-dd")">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
