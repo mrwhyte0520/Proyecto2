@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Empleados.Mvc.ViewModels;
@@ -54,9 +55,11 @@ public class EmpleadoFormViewModel
     [Required(ErrorMessage = "El correo es obligatorio.")]
     [EmailAddress(ErrorMessage = "Ingrese un correo válido.")]
     [StringLength(150)]
-    [RegularExpression(@"^[^@\s]+@gmail\.com$", ErrorMessage = "El correo debe ser una cuenta de Gmail (@gmail.com).")]
     [Display(Name = "Correo electrónico")]
     public string Email { get; set; } = string.Empty;
+
+    [Display(Name = "Fotografía")]
+    public IFormFile? Foto { get; set; }
 
     public string? FotografiaRuta { get; set; }
 

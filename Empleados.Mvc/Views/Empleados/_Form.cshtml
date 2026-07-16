@@ -59,6 +59,18 @@
         <input asp-for="Direccion" class="form-control" />
         <span asp-validation-for="Direccion" class="text-danger"></span>
     </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="Foto" class="form-label"></label>
+        <input asp-for="Foto" type="file" accept=".jpg,.jpeg,.png" class="form-control" />
+        <span asp-validation-for="Foto" class="text-danger"></span>
+        @if (!string.IsNullOrEmpty(Model.FotografiaRuta))
+        {
+            <div class="form-text">
+                Foto actual: <img src="@Model.FotografiaRuta" alt="Fotografía actual" style="height:40px;" class="rounded ms-1" />
+            </div>
+        }
+    </div>
 </div>
 
 <button type="submit" class="btn btn-primary">Guardar</button>

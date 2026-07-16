@@ -72,6 +72,11 @@ public class EmpleadosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EmpleadoFormViewModel vm)
     {
+        if (!ValidarFoto(vm.Foto, out var errorFoto))
+        {
+            ModelState.AddModelError(nameof(vm.Foto), errorFoto!);
+        }
+
         if (!ModelState.IsValid)
         {
             vm.DepartamentosDisponibles = await ObtenerDepartamentosSelectListAsync();
@@ -93,6 +98,12 @@ public class EmpleadosController : Controller
                 Telefono = vm.Telefono,
                 Email = vm.Email
             });
+
+            if (vm.Foto is not null && vm.Foto.Length > 0)
+            {
+                var rutaFoto = await GuardarFotoAsync(vm.Foto);
+                await _empleadoService.SetFotografiaAsync(creado.Id, rutaFoto);
+            }
 
             TempData["Mensaje"] = "Empleado creado correctamente.";
             return RedirectToAction(nameof(Details), new { id = creado.Id });
@@ -140,6 +151,11 @@ public class EmpleadosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, EmpleadoFormViewModel vm)
     {
+        if (!ValidarFoto(vm.Foto, out var errorFoto))
+        {
+            ModelState.AddModelError(nameof(vm.Foto), errorFoto!);
+        }
+
         if (!ModelState.IsValid)
         {
             vm.DepartamentosDisponibles = await ObtenerDepartamentosSelectListAsync();
@@ -162,6 +178,12 @@ public class EmpleadosController : Controller
                 Email = vm.Email
             });
 
+            if (vm.Foto is not null && vm.Foto.Length > 0)
+            {
+                var rutaFoto = await GuardarFotoAsync(vm.Foto);
+                await _empleadoService.SetFotografiaAsync(id, rutaFoto);
+            }
+
             TempData["Mensaje"] = "Empleado actualizado correctamente.";
             return RedirectToAction(nameof(Details), new { id });
         }
@@ -178,37 +200,14 @@ public class EmpleadosController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubirFoto(int id, IFormFile foto)
     {
-        if (foto is null || foto.Length == 0)
+        if (!ValidarFoto(foto, out var errorFoto) || foto is null || foto.Length == 0)
         {
-            TempData["Error"] = "Debe seleccionar un archivo.";
+            TempData["Error"] = errorFoto ?? "Debe seleccionar un archivo.";
             return RedirectToAction(nameof(Edit), new { id });
         }
 
-        if (foto.Length > TamanoMaximoFotoBytes)
-        {
-            TempData["Error"] = "El archivo no puede superar los 5 MB.";
-            return RedirectToAction(nameof(Edit), new { id });
-        }
-
-        var extension = Path.GetExtension(foto.FileName).ToLowerInvariant();
-        if (!ExtensionesPermitidas.Contains(extension))
-        {
-            TempData["Error"] = "Solo se permiten imágenes .jpg, .jpeg o .png.";
-            return RedirectToAction(nameof(Edit), new { id });
-        }
-
-        var carpetaDestino = Path.Combine(_environment.WebRootPath, "uploads", "empleados");
-        Directory.CreateDirectory(carpetaDestino);
-
-        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
-        var rutaFisica = Path.Combine(carpetaDestino, nombreArchivo);
-
-        await using (var stream = new FileStream(rutaFisica, FileMode.Create))
-        {
-            await foto.CopyToAsync(stream);
-        }
-
-        await _empleadoService.SetFotografiaAsync(id, $"/uploads/empleados/{nombreArchivo}");
+        var rutaFoto = await GuardarFotoAsync(foto);
+        await _empleadoService.SetFotografiaAsync(id, rutaFoto);
 
         TempData["Mensaje"] = "Fotografía actualizada correctamente.";
         return RedirectToAction(nameof(Details), new { id });
@@ -248,6 +247,47 @@ public class EmpleadosController : Controller
     {
         var departamentos = await _departamentoService.GetAllAsync();
         return departamentos.Select(d => new SelectListItem(d.Nombre, d.Id.ToString()));
+    }
+
+    private bool ValidarFoto(IFormFile? foto, out string? error)
+    {
+        error = null;
+        if (foto is null || foto.Length == 0)
+        {
+            return true;
+        }
+
+        if (foto.Length > TamanoMaximoFotoBytes)
+        {
+            error = "El archivo no puede superar los 5 MB.";
+            return false;
+        }
+
+        var extension = Path.GetExtension(foto.FileName).ToLowerInvariant();
+        if (!ExtensionesPermitidas.Contains(extension))
+        {
+            error = "Solo se permiten imágenes .jpg, .jpeg o .png.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task<string> GuardarFotoAsync(IFormFile foto)
+    {
+        var carpetaDestino = Path.Combine(_environment.WebRootPath, "uploads", "empleados");
+        Directory.CreateDirectory(carpetaDestino);
+
+        var extension = Path.GetExtension(foto.FileName).ToLowerInvariant();
+        var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+        var rutaFisica = Path.Combine(carpetaDestino, nombreArchivo);
+
+        await using (var stream = new FileStream(rutaFisica, FileMode.Create))
+        {
+            await foto.CopyToAsync(stream);
+        }
+
+        return $"/uploads/empleados/{nombreArchivo}";
     }
 
     private static EmpleadoDetailsViewModel ToDetailsViewModel(Empleado empleado)

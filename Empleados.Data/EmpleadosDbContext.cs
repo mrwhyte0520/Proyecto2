@@ -29,7 +29,6 @@ public class EmpleadosDbContext : IdentityDbContext<ApplicationUser>
 
         modelBuilder.Entity<Empleado>(entity =>
         {
-            entity.HasIndex(e => e.Email).IsUnique();
             entity.Property(e => e.Estado)
                   .HasConversion<string>()
                   .HasMaxLength(20);

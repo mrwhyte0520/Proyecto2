@@ -40,6 +40,5 @@ public class EmpleadoCreateDto
     [Required]
     [EmailAddress]
     [StringLength(150)]
-    [RegularExpression(@"^[^@\s]+@gmail\.com$", ErrorMessage = "El correo debe ser una cuenta de Gmail (@gmail.com).")]
     public string Email { get; set; } = string.Empty;
 }
